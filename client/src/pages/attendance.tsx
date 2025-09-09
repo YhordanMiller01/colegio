@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Plus, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { AttendanceModal } from '@/components/attendance-modal';
 
 interface Student {
   id: string;
@@ -36,6 +37,7 @@ export default function Attendance() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedSection, setSelectedSection] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: attendanceRecords, isLoading } = useQuery<AttendanceRecord[]>({
     queryKey: ['/api/attendance', selectedDate, selectedGrade, selectedSection],
@@ -104,7 +106,10 @@ export default function Attendance() {
           <h2 className="text-2xl font-bold">Control de Asistencia</h2>
           <p className="text-muted-foreground">Registra y consulta la asistencia de estudiantes</p>
         </div>
-        <Button data-testid="button-register-attendance">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          data-testid="button-register-attendance"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Registrar Asistencia
         </Button>
@@ -239,6 +244,11 @@ export default function Attendance() {
           )}
         </CardContent>
       </Card>
+
+      <AttendanceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

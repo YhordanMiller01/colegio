@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Plus, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { StudentModal } from '@/components/student-modal';
 
 interface Student {
   id: string;
@@ -33,6 +34,9 @@ export default function Students() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | undefined>();
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
   const { data: students, isLoading } = useQuery<Student[]>({
     queryKey: ['/api/students'],
@@ -125,7 +129,14 @@ export default function Students() {
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
-          <Button data-testid="button-new-student">
+          <Button 
+            onClick={() => {
+              setSelectedStudent(undefined);
+              setModalMode('create');
+              setIsModalOpen(true);
+            }}
+            data-testid="button-new-student"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Estudiante
           </Button>
@@ -273,6 +284,11 @@ export default function Students() {
                             <Button 
                               variant="ghost" 
                               size="sm"
+                              onClick={() => {
+                                setSelectedStudent(student);
+                                setModalMode('edit');
+                                setIsModalOpen(true);
+                              }}
                               data-testid={`button-edit-${student.id}`}
                             >
                               <Edit className="h-4 w-4" />
@@ -347,6 +363,13 @@ export default function Students() {
           )}
         </CardContent>
       </Card>
+
+      <StudentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        student={selectedStudent}
+        mode={modalMode}
+      />
     </div>
   );
 }

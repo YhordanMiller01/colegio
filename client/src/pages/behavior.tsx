@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, ThumbsUp, ThumbsDown, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { BehaviorModal } from '@/components/behavior-modal';
 
 interface Student {
   id: string;
@@ -31,6 +33,7 @@ export default function Behavior() {
   const { token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: behaviorReports, isLoading } = useQuery<BehaviorReport[]>({
     queryKey: ['/api/behavior-reports'],
@@ -70,7 +73,10 @@ export default function Behavior() {
           <h2 className="text-2xl font-bold">Reportes de Comportamiento</h2>
           <p className="text-muted-foreground">Gestiona reportes positivos y negativos de estudiantes</p>
         </div>
-        <Button data-testid="button-new-report">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          data-testid="button-new-report"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Reporte
         </Button>
@@ -170,6 +176,11 @@ export default function Behavior() {
           )}
         </CardContent>
       </Card>
+
+      <BehaviorModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

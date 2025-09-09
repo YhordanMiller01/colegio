@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Vote, CheckCircle, PieChart, BarChart3, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { SurveyModal } from '@/components/survey-modal';
+import { SurveyResultsModal } from '@/components/survey-results-modal';
 
 interface Survey {
   id: string;
@@ -23,6 +25,10 @@ export default function Surveys() {
   const { token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
   const { data: surveys, isLoading } = useQuery<Survey[]>({
     queryKey: ['/api/surveys'],
@@ -68,7 +74,14 @@ export default function Surveys() {
           <h2 className="text-2xl font-bold">Encuestas</h2>
           <p className="text-muted-foreground">Crea y gestiona encuestas para estudiantes y padres</p>
         </div>
-        <Button data-testid="button-new-survey">
+        <Button 
+          onClick={() => {
+            setSelectedSurvey(null);
+            setModalMode('create');
+            setIsModalOpen(true);
+          }}
+          data-testid="button-new-survey"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nueva Encuesta
         </Button>
@@ -176,6 +189,10 @@ export default function Surveys() {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        onClick={() => {
+                          setSelectedSurvey(survey);
+                          setIsResultsModalOpen(true);
+                        }}
                         data-testid={`button-view-results-${survey.id}`}
                       >
                         <BarChart3 className="mr-1 h-4 w-4" />
@@ -184,6 +201,11 @@ export default function Surveys() {
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        onClick={() => {
+                          setSelectedSurvey(survey);
+                          setModalMode('edit');
+                          setIsModalOpen(true);
+                        }}
                         data-testid={`button-edit-survey-${survey.id}`}
                       >
                         <Edit className="h-4 w-4" />
@@ -216,6 +238,10 @@ export default function Surveys() {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        onClick={() => {
+                          setSelectedSurvey(survey);
+                          setIsResultsModalOpen(true);
+                        }}
                         data-testid={`button-view-results-${survey.id}`}
                       >
                         <BarChart3 className="mr-1 h-4 w-4" />
@@ -229,6 +255,19 @@ export default function Surveys() {
           )}
         </CardContent>
       </Card>
+
+      <SurveyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        survey={selectedSurvey || undefined}
+        mode={modalMode}
+      />
+
+      <SurveyResultsModal
+        isOpen={isResultsModalOpen}
+        onClose={() => setIsResultsModalOpen(false)}
+        survey={selectedSurvey}
+      />
     </div>
   );
 }
