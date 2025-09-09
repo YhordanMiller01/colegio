@@ -130,7 +130,7 @@ export default function Attendance() {
                   <SelectValue placeholder="Todos los grados" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los grados</SelectItem>
+                  <SelectItem value="all">Todos los grados</SelectItem>
                   <SelectItem value="6°">6°</SelectItem>
                   <SelectItem value="7°">7°</SelectItem>
                   <SelectItem value="8°">8°</SelectItem>
@@ -147,7 +147,7 @@ export default function Attendance() {
                   <SelectValue placeholder="Todas las secciones" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas las secciones</SelectItem>
+                  <SelectItem value="all">Todas las secciones</SelectItem>
                   <SelectItem value="A">A</SelectItem>
                   <SelectItem value="B">B</SelectItem>
                   <SelectItem value="C">C</SelectItem>

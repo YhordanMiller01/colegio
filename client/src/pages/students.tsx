@@ -153,7 +153,7 @@ export default function Students() {
                   <SelectValue placeholder="Todos los grados" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los grados</SelectItem>
+                  <SelectItem value="all">Todos los grados</SelectItem>
                   <SelectItem value="6°">6°</SelectItem>
                   <SelectItem value="7°">7°</SelectItem>
                   <SelectItem value="8°">8°</SelectItem>
@@ -170,7 +170,7 @@ export default function Students() {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="active">Activo</SelectItem>
                   <SelectItem value="inactive">Inactivo</SelectItem>
                   <SelectItem value="graduated">Graduado</SelectItem>
