@@ -124,7 +124,7 @@ export function SurveyModal({ isOpen, onClose, survey, mode }: SurveyModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800">
         <DialogHeader>
           <DialogTitle>
             {mode === 'edit' ? 'Editar Encuesta' : 'Nueva Encuesta'}
@@ -157,13 +157,13 @@ export function SurveyModal({ isOpen, onClose, survey, mode }: SurveyModalProps)
             <div>
               <Label className="block text-sm font-medium mb-2">Dirigida a *</Label>
               <Select value={formData.target} onValueChange={(value) => setFormData({ ...formData, target: value as any })}>
-                <SelectTrigger data-testid="select-target">
-                  <SelectValue />
+                <SelectTrigger data-testid="select-target" className="bg-zinc-800 text-white border-zinc-700">
+                  <SelectValue className="text-white" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="students">Estudiantes</SelectItem>
-                  <SelectItem value="parents">Padres</SelectItem>
-                  <SelectItem value="both">Ambos</SelectItem>
+                <SelectContent className="bg-zinc-900 text-white border-zinc-700">
+                  <SelectItem value="students" className="bg-zinc-900 text-white">Estudiantes</SelectItem>
+                  <SelectItem value="parents" className="bg-zinc-900 text-white">Padres</SelectItem>
+                  <SelectItem value="both" className="bg-zinc-900 text-white">Ambos</SelectItem>
                 </SelectContent>
               </Select>
             </div>

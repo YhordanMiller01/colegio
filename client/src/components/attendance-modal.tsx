@@ -105,7 +105,7 @@ export function AttendanceModal({ isOpen, onClose }: AttendanceModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800">
         <DialogHeader>
           <DialogTitle>Registrar Asistencia</DialogTitle>
         </DialogHeader>
@@ -114,12 +114,12 @@ export function AttendanceModal({ isOpen, onClose }: AttendanceModalProps) {
           <div>
             <Label className="block text-sm font-medium mb-2">Estudiante *</Label>
             <Select value={formData.studentId} onValueChange={(value) => setFormData({ ...formData, studentId: value })}>
-              <SelectTrigger data-testid="select-student">
-                <SelectValue placeholder="Seleccionar estudiante" />
+              <SelectTrigger data-testid="select-student" className="bg-zinc-800 text-white border-zinc-700">
+                <SelectValue placeholder="Seleccionar estudiante" className="text-white" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-zinc-900 text-white border-zinc-700">
                 {students?.map((student) => (
-                  <SelectItem key={student.id} value={student.id}>
+                  <SelectItem key={student.id} value={student.id} className="bg-zinc-900 text-white">
                     {student.firstName} {student.lastName} - {student.grade} {student.section}
                   </SelectItem>
                 ))}
@@ -151,13 +151,13 @@ export function AttendanceModal({ isOpen, onClose }: AttendanceModalProps) {
           <div>
             <Label className="block text-sm font-medium mb-2">Estado *</Label>
             <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as any })}>
-              <SelectTrigger data-testid="select-status">
-                <SelectValue />
+              <SelectTrigger data-testid="select-status" className="bg-zinc-800 text-white border-zinc-700">
+                <SelectValue className="text-white" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="present">Presente</SelectItem>
-                <SelectItem value="absent">Ausente</SelectItem>
-                <SelectItem value="late">Tarde</SelectItem>
+              <SelectContent className="bg-zinc-900 text-white border-zinc-700">
+                <SelectItem value="present" className="bg-zinc-900 text-white">Presente</SelectItem>
+                <SelectItem value="absent" className="bg-zinc-900 text-white">Ausente</SelectItem>
+                <SelectItem value="late" className="bg-zinc-900 text-white">Tarde</SelectItem>
               </SelectContent>
             </Select>
           </div>

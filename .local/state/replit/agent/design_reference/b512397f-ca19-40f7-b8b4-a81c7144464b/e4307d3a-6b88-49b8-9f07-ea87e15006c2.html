@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DisciColeControl - Sistema de Gestión Estudiantil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Inter", "sans-serif"],
+                }
+            },
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --background: hsl(0 0% 100%);
+            --foreground: hsl(222 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222 84% 4.9%);
+            --primary: hsl(217 91% 60%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222 47% 11%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215 16% 47%);
+            --accent: hsl(45 93% 47%);
+            --accent-foreground: hsl(222 84% 4.9%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214 32% 91%);
+            --input: hsl(214 32% 91%);
+            --ring: hsl(217 91% 60%);
+            --radius: 8px;
+        }
+        
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans">
+    <!-- @COMPONENT: LoginModal [shows when user is not authenticated] -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-card p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <div class="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-graduation-cap text-2xl text-primary-foreground"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-foreground">DisciColeControl</h1>
+                <p class="text-muted-foreground mt-2">Sistema de Gestión Estudiantil</p>
+            </div>
+            
+            <form class="space-y-6" data-event="submit:handleLogin">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        placeholder="admin@colegio.edu.co"
+                        data-mock="true"
+                        required
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-foreground mb-2">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        placeholder="••••••••"
+                        data-mock="true"
+                        required
+                    >
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-md font-medium transition-colors"
+                    data-implementation="Should validate credentials and authenticate user"
+                >
+                    Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <a href="#" class="text-sm text-primary hover:text-primary/80" data-mock="true">
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: LoginModal -->
+
+    <!-- @COMPONENT: MainApp [main application interface] -->
+    <div id="mainApp" class="hidden min-h-screen bg-background">
+        <!-- @COMPONENT: Sidebar [navigation sidebar] -->
+        <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-card border-r border-border transform transition-transform duration-300 z-40">
+            <div class="p-6 border-b border-border">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-primary-foreground"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-foreground">DisciColeControl</h2>
+                        <p class="text-sm text-muted-foreground">Admin Panel</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-2">
+                <button class="nav-item active w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="dashboard">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                
+                <button class="nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="attendance">
+                    <i class="fas fa-calendar-check w-5"></i>
+                    <span>Asistencia</span>
+                </button>
+                
+                <button class="nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="behavior">
+                    <i class="fas fa-star w-5"></i>
+                    <span>Comportamiento</span>
+                </button>
+                
+                <button class="nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="notifications">
+                    <i class="fas fa-bell w-5"></i>
+                    <span>Notificaciones</span>
+                </button>
+                
+                <button class="nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="surveys">
+                    <i class="fas fa-poll w-5"></i>
+                    <span>Encuestas</span>
+                </button>
+                
+                <button class="nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors" data-view="students">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Estudiantes</span>
+                </button>
+            </nav>
+            
+            <div class="absolute bottom-4 left-4 right-4">
+                <button class="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left hover:bg-secondary transition-colors text-destructive" data-event="click:handleLogout">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent [main content area] -->
+        <main class="ml-64 min-h-screen">
+            <!-- @COMPONENT: TopBar [top navigation bar] -->
+            <header class="bg-card border-b border-border p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="lg:hidden p-2 rounded-md hover:bg-secondary">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle" class="text-xl font-semibold text-foreground">Dashboard</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-muted-foreground" data-bind="currentDate">
+                        <span data-mock="true">Lunes, 15 de Enero 2024</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-primary-foreground" data-bind="user.initials" data-mock="true">AD</span>
+                        </div>
+                        <span class="text-sm font-medium" data-bind="user.name" data-mock="true">Administrador</span>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: TopBar -->
+
+            <!-- @COMPONENT: DashboardView [dashboard statistics and overview] -->
+            <div id="dashboardView" class="view-content p-6 space-y-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Estudiantes Totales</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.totalStudents" data-mock="true">1,247</p>
+                            </div>
+                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Asistencia Hoy</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.attendanceToday" data-mock="true">94.2%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Reportes Pendientes</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.pendingReports" data-mock="true">23</p>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Notificaciones Enviadas</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.notificationsSent" data-mock="true">156</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bell text-blue-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <h3 class="text-lg font-semibold mb-4">Asistencia Semanal</h3>
+                        <div class="chart-container">
+                            <!-- @FUNCTIONALITY: This should implement a line chart showing weekly attendance -->
+                            <div class="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
+                                <p class="text-muted-foreground">Gráfico de Asistencia Semanal</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <h3 class="text-lg font-semibold mb-4">Comportamiento por Grado</h3>
+                        <div class="chart-container">
+                            <!-- @FUNCTIONALITY: This should implement a bar chart showing behavior reports by grade -->
+                            <div class="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
+                                <p class="text-muted-foreground">Gráfico de Comportamiento por Grado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-card p-6 rounded-lg border border-border">
+                    <h3 class="text-lg font-semibold mb-4">Actividad Reciente</h3>
+                    <div class="space-y-4">
+                        <!-- @MAP: recentActivities.map(activity => ( -->
+                        <div class="flex items-center space-x-4 p-3 hover:bg-muted/20 rounded-lg" data-mock="true">
+                            <div class="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-green-500 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Asistencia registrada para 10° A</p>
+                                <p class="text-xs text-muted-foreground">Hace 5 minutos</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 hover:bg-muted/20 rounded-lg" data-mock="true">
+                            <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-bell text-blue-500 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Notificación enviada a padres de 8° B</p>
+                                <p class="text-xs text-muted-foreground">Hace 15 minutos</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 hover:bg-muted/20 rounded-lg" data-mock="true">
+                            <div class="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-star text-amber-500 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Reporte de comportamiento positivo registrado</p>
+                                <p class="text-xs text-muted-foreground">Hace 30 minutos</p>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardView -->
+
+            <!-- @COMPONENT: AttendanceView [attendance management] -->
+            <div id="attendanceView" class="view-content hidden p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Control de Asistencia</h2>
+                        <p class="text-muted-foreground">Registra y consulta la asistencia de estudiantes</p>
+                    </div>
+                    <button class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium">
+                        <i class="fas fa-plus mr-2"></i>Registrar Asistencia
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-card p-4 rounded-lg border border-border">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Fecha</label>
+                            <input type="date" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Grado</label>
+                            <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                <option>Todos los grados</option>
+                                <option>6°</option>
+                                <option>7°</option>
+                                <option>8°</option>
+                                <option>9°</option>
+                                <option>10°</option>
+                                <option>11°</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Sección</label>
+                            <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                <option>Todas las secciones</option>
+                                <option>A</option>
+                                <option>B</option>
+                                <option>C</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md font-medium">
+                                Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="bg-card rounded-lg border border-border overflow-hidden">
+                    <div class="p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">Asistencia del Día</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-muted/50">
+                                <tr>
+                                    <th class="text-left p-4 font-medium">Estudiante</th>
+                                    <th class="text-left p-4 font-medium">Grado</th>
+                                    <th class="text-left p-4 font-medium">Estado</th>
+                                    <th class="text-left p-4 font-medium">Hora</th>
+                                    <th class="text-left p-4 font-medium">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @MAP: attendanceRecords.map(record => ( -->
+                                <tr class="border-b border-border hover:bg-muted/20" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                                                JD
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Juan David Pérez</p>
+                                                <p class="text-sm text-muted-foreground">ID: 2024001</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">10° A</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
+                                            Presente
+                                        </span>
+                                    </td>
+                                    <td class="p-4">07:15 AM</td>
+                                    <td class="p-4">
+                                        <button class="text-primary hover:text-primary/80">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="border-b border-border hover:bg-muted/20" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                                                MG
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">María González López</p>
+                                                <p class="text-sm text-muted-foreground">ID: 2024002</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">10° A</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-600">
+                                            Ausente
+                                        </span>
+                                    </td>
+                                    <td class="p-4">--</td>
+                                    <td class="p-4">
+                                        <button class="text-primary hover:text-primary/80">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: AttendanceView -->
+
+            <!-- @COMPONENT: BehaviorView [behavior reports management] -->
+            <div id="behaviorView" class="view-content hidden p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Reportes de Comportamiento</h2>
+                        <p class="text-muted-foreground">Gestiona reportes positivos y negativos de estudiantes</p>
+                    </div>
+                    <button class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Reporte
+                    </button>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-card p-4 rounded-lg border border-border text-center">
+                        <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-thumbs-up text-green-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-green-600">Reportes Positivos</h3>
+                        <p class="text-2xl font-bold mt-1" data-bind="stats.positiveReports" data-mock="true">142</p>
+                    </div>
+                    
+                    <div class="bg-card p-4 rounded-lg border border-border text-center">
+                        <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-thumbs-down text-red-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-red-600">Reportes Negativos</h3>
+                        <p class="text-2xl font-bold mt-1" data-bind="stats.negativeReports" data-mock="true">28</p>
+                    </div>
+                    
+                    <div class="bg-card p-4 rounded-lg border border-border text-center">
+                        <div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-clock text-amber-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-amber-600">Pendientes</h3>
+                        <p class="text-2xl font-bold mt-1" data-bind="stats.pendingBehaviorReports" data-mock="true">5</p>
+                    </div>
+                </div>
+
+                <!-- Recent Reports -->
+                <div class="bg-card rounded-lg border border-border">
+                    <div class="p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">Reportes Recientes</h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- @MAP: behaviorReports.map(report => ( -->
+                        <div class="flex items-start space-x-4 p-4 bg-muted/20 rounded-lg" data-mock="true">
+                            <div class="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-star text-green-500"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-medium">Ana Sofia Rodríguez</h4>
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
+                                        Positivo
+                                    </span>
+                                </div>
+                                <p class="text-sm text-muted-foreground mt-1">Excelente participación en clase de matemáticas</p>
+                                <div class="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                    <span>8° B</span>
+                                    <span>Prof. Carlos Mendoza</span>
+                                    <span>Hace 2 horas</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 p-4 bg-muted/20 rounded-lg" data-mock="true">
+                            <div class="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-medium">Diego Martínez</h4>
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-600">
+                                        Negativo
+                                    </span>
+                                </div>
+                                <p class="text-sm text-muted-foreground mt-1">Interrupción constante durante la clase</p>
+                                <div class="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                    <span>9° A</span>
+                                    <span>Prof. Lucia Torres</span>
+                                    <span>Hace 4 horas</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: BehaviorView -->
+
+            <!-- @COMPONENT: NotificationsView [parent notifications management] -->
+            <div id="notificationsView" class="view-content hidden p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Notificaciones a Padres</h2>
+                        <p class="text-muted-foreground">Envía y gestiona comunicaciones con los padres de familia</p>
+                    </div>
+                    <button class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium">
+                        <i class="fas fa-paper-plane mr-2"></i>Nueva Notificación
+                    </button>
+                </div>
+
+                <!-- Notification Form -->
+                <div class="bg-card p-6 rounded-lg border border-border">
+                    <h3 class="text-lg font-semibold mb-4">Enviar Notificación</h3>
+                    <form class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Destinatarios</label>
+                                <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                    <option>Seleccionar grupo</option>
+                                    <option>Todos los padres</option>
+                                    <option>Padres de 10° A</option>
+                                    <option>Padres de 9° B</option>
+                                    <option>Padres específicos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Tipo</label>
+                                <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                    <option>Informativo</option>
+                                    <option>Comportamiento</option>
+                                    <option>Asistencia</option>
+                                    <option>Académico</option>
+                                    <option>Evento</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Asunto</label>
+                            <input type="text" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Asunto del mensaje" data-mock="true">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Mensaje</label>
+                            <textarea rows="4" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Escriba su mensaje aquí..." data-mock="true"></textarea>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" class="px-4 py-2 border border-border rounded-md hover:bg-muted">
+                                Guardar Borrador
+                            </button>
+                            <button type="submit" class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md">
+                                Enviar Ahora
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sent Notifications -->
+                <div class="bg-card rounded-lg border border-border">
+                    <div class="p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">Notificaciones Enviadas</h3>
+                    </div>
+                    <div class="divide-y divide-border">
+                        <!-- @MAP: sentNotifications.map(notification => ( -->
+                        <div class="p-4 hover:bg-muted/20" data-mock="true">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-medium">Reunión de padres 10° A</h4>
+                                    <p class="text-sm text-muted-foreground mt-1">Se convoca a reunión para el próximo viernes...</p>
+                                    <div class="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                        <span>25 destinatarios</span>
+                                        <span>18 leídos</span>
+                                        <span>Ayer 14:30</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 rounded-full text-xs bg-green-500/10 text-green-600">Enviado</span>
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 hover:bg-muted/20" data-mock="true">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-medium">Reporte de comportamiento - Diego Martínez</h4>
+                                    <p class="text-sm text-muted-foreground mt-1">Estimados padres, les informamos sobre...</p>
+                                    <div class="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                                        <span>2 destinatarios</span>
+                                        <span>2 leídos</span>
+                                        <span>Hace 2 horas</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 rounded-full text-xs bg-green-500/10 text-green-600">Enviado</span>
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: NotificationsView -->
+
+            <!-- @COMPONENT: SurveysView [surveys management] -->
+            <div id="surveysView" class="view-content hidden p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Encuestas</h2>
+                        <p class="text-muted-foreground">Crea y gestiona encuestas para estudiantes y padres</p>
+                    </div>
+                    <button class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium">
+                        <i class="fas fa-plus mr-2"></i>Nueva Encuesta
+                    </button>
+                </div>
+
+                <!-- Survey Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Encuestas Activas</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.activeSurveys" data-mock="true">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-poll text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Respuestas Recibidas</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.surveyResponses" data-mock="true">287</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-muted-foreground">Tasa de Participación</p>
+                                <p class="text-2xl font-bold text-foreground" data-bind="stats.participationRate" data-mock="true">76%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-pie text-blue-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Surveys -->
+                <div class="bg-card rounded-lg border border-border">
+                    <div class="p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">Encuestas Activas</h3>
+                    </div>
+                    <div class="divide-y divide-border">
+                        <!-- @MAP: activeSurveys.map(survey => ( -->
+                        <div class="p-4 hover:bg-muted/20" data-mock="true">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-medium">Satisfacción con el Servicio Alimentario</h4>
+                                    <p class="text-sm text-muted-foreground mt-1">Evaluación de la calidad y satisfacción con el servicio de restaurante escolar</p>
+                                    <div class="flex items-center space-x-4 mt-3">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-sm text-muted-foreground">Dirigida a:</span>
+                                            <span class="px-2 py-1 rounded-full text-xs bg-blue-500/10 text-blue-600">Estudiantes</span>
+                                        </div>
+                                        <div class="text-sm text-muted-foreground">
+                                            <span>156 respuestas</span>
+                                        </div>
+                                        <div class="text-sm text-muted-foreground">
+                                            <span>Finaliza: 25 Ene</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="fas fa-chart-bar mr-1"></i>Ver Resultados
+                                    </button>
+                                    <button class="text-muted-foreground hover:text-foreground">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 hover:bg-muted/20" data-mock="true">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-medium">Evaluación Docente Semestral</h4>
+                                    <p class="text-sm text-muted-foreground mt-1">Encuesta de satisfacción y evaluación del desempeño docente</p>
+                                    <div class="flex items-center space-x-4 mt-3">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-sm text-muted-foreground">Dirigida a:</span>
+                                            <span class="px-2 py-1 rounded-full text-xs bg-green-500/10 text-green-600">Padres</span>
+                                        </div>
+                                        <div class="text-sm text-muted-foreground">
+                                            <span>89 respuestas</span>
+                                        </div>
+                                        <div class="text-sm text-muted-foreground">
+                                            <span>Finaliza: 30 Ene</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="fas fa-chart-bar mr-1"></i>Ver Resultados
+                                    </button>
+                                    <button class="text-muted-foreground hover:text-foreground">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SurveysView -->
+
+            <!-- @COMPONENT: StudentsView [student management] -->
+            <div id="studentsView" class="view-content hidden p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Gestión de Estudiantes</h2>
+                        <p class="text-muted-foreground">Administra la información de los estudiantes</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md font-medium">
+                            <i class="fas fa-download mr-2"></i>Exportar
+                        </button>
+                        <button class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium">
+                            <i class="fas fa-plus mr-2"></i>Nuevo Estudiante
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="bg-card p-4 rounded-lg border border-border">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Buscar</label>
+                            <input type="text" placeholder="Nombre o ID del estudiante" class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Grado</label>
+                            <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                <option>Todos los grados</option>
+                                <option>6°</option>
+                                <option>7°</option>
+                                <option>8°</option>
+                                <option>9°</option>
+                                <option>10°</option>
+                                <option>11°</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Estado</label>
+                            <select class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring" data-mock="true">
+                                <option>Todos</option>
+                                <option>Activo</option>
+                                <option>Inactivo</option>
+                                <option>Graduado</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button class="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md font-medium">
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="bg-card rounded-lg border border-border overflow-hidden">
+                    <div class="p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">Lista de Estudiantes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-muted/50">
+                                <tr>
+                                    <th class="text-left p-4 font-medium">Estudiante</th>
+                                    <th class="text-left p-4 font-medium">Grado</th>
+                                    <th class="text-left p-4 font-medium">Estado</th>
+                                    <th class="text-left p-4 font-medium">Padre/Tutor</th>
+                                    <th class="text-left p-4 font-medium">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @MAP: students.map(student => ( -->
+                                <tr class="border-b border-border hover:bg-muted/20" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                                                AS
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Ana Sofia Rodríguez</p>
+                                                <p class="text-sm text-muted-foreground">ID: 2024001</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">8° B</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
+                                            Activo
+                                        </span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div>
+                                            <p class="text-sm font-medium">Carlos Rodríguez</p>
+                                            <p class="text-xs text-muted-foreground">carlos.rodriguez@email.com</p>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary/80">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="text-primary hover:text-primary/80">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-destructive hover:text-destructive/80">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="border-b border-border hover:bg-muted/20" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                                                JD
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Juan David Pérez</p>
+                                                <p class="text-sm text-muted-foreground">ID: 2024002</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">10° A</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
+                                            Activo
+                                        </span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div>
+                                            <p class="text-sm font-medium">María Pérez</p>
+                                            <p class="text-xs text-muted-foreground">maria.perez@email.com</p>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary/80">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="text-primary hover:text-primary/80">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-destructive hover:text-destructive/80">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="p-4 border-t border-border flex items-center justify-between">
+                        <p class="text-sm text-muted-foreground">
+                            Mostrando 1-10 de 1,247 estudiantes
+                        </p>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-border rounded hover:bg-muted text-sm">Anterior</button>
+                            <button class="px-3 py-1 bg-primary text-primary-foreground rounded text-sm">1</button>
+                            <button class="px-3 py-1 border border-border rounded hover:bg-muted text-sm">2</button>
+                            <button class="px-3 py-1 border border-border rounded hover:bg-muted text-sm">3</button>
+                            <button class="px-3 py-1 border border-border rounded hover:bg-muted text-sm">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: StudentsView -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: MainApp -->
+
+    <script>
+        // TODO: Implement business logic, API calls, or state management
+        (function() {
+            // Navigation state management
+            let currentView = 'dashboard';
+            
+            // Initialize app
+            function initApp() {
+                // Hide login modal and show main app (simulating successful login)
+                setTimeout(() => {
+                    document.getElementById('loginModal').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                }, 1000); // Simulate login delay
+                
+                // Setup navigation
+                setupNavigation();
+                
+                // Setup sidebar toggle for mobile
+                setupSidebarToggle();
+            }
+            
+            function setupNavigation() {
+                const navItems = document.querySelectorAll('.nav-item');
+                const viewContents = document.querySelectorAll('.view-content');
+                const pageTitle = document.getElementById('pageTitle');
+                
+                navItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const viewName = this.getAttribute('data-view');
+                        
+                        // Remove active class from all nav items
+                        navItems.forEach(nav => nav.classList.remove('active', 'bg-secondary', 'text-secondary-foreground'));
+                        
+                        // Add active class to clicked item
+                        this.classList.add('active', 'bg-secondary', 'text-secondary-foreground');
+                        
+                        // Hide all view contents
+                        viewContents.forEach(view => view.classList.add('hidden'));
+                        
+                        // Show selected view
+                        const targetView = document.getElementById(viewName + 'View');
+                        if (targetView) {
+                            targetView.classList.remove('hidden');
+                        }
+                        
+                        // Update page title
+                        const titles = {
+                            'dashboard': 'Dashboard',
+                            'attendance': 'Control de Asistencia',
+                            'behavior': 'Reportes de Comportamiento',
+                            'notifications': 'Notificaciones a Padres',
+                            'surveys': 'Encuestas',
+                            'students': 'Gestión de Estudiantes'
+                        };
+                        pageTitle.textContent = titles[viewName] || 'Dashboard';
+                        
+                        currentView = viewName;
+                    });
+                });
+            }
+            
+            function setupSidebarToggle() {
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                const sidebar = document.getElementById('sidebar');
+                
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('sidebar-hidden');
+                });
+                
+                // Close sidebar on mobile when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (window.innerWidth < 1024) {
+                        if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                            sidebar.classList.add('sidebar-hidden');
+                        }
+                    }
+                });
+            }
+            
+            // Initialize when DOM is loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initApp);
+            } else {
+                initApp();
+            }
+            
+            // Responsive sidebar handling
+            function handleResize() {
+                const sidebar = document.getElementById('sidebar');
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.remove('sidebar-hidden');
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Call once on load
+            
+        })();
+    </script>
+</body>
+</html>
