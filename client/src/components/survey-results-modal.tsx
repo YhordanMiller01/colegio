@@ -1,4 +1,31 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+// Utilidad para exportar resultados como CSV
+function exportSurveyResultsToCSV(survey: Survey, mockResponses: any[]) {
+  let csv = `Encuesta:,${survey.title}\n`;
+  csv += `Descripción:,${survey.description || ''}\n`;
+  csv += `Público objetivo:,${survey.target}\n`;
+  csv += `Respuestas recibidas:,${survey.responseCount}\n\n`;
+  survey.questions.forEach((question, idx) => {
+    csv += `Pregunta ${idx + 1}:,${question}\n`;
+    if (mockResponses[idx]) {
+      csv += 'Opción,Respuestas\n';
+      Object.entries(mockResponses[idx].responses).forEach(([option, count]) => {
+        csv += `${option},${count}\n`;
+      });
+    }
+    csv += '\n';
+  });
+  // Descargar el archivo
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `resultados_encuesta_${survey.title.replace(/\s+/g, '_')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +87,7 @@ export function SurveyResultsModal({ isOpen, onClose, survey }: SurveyResultsMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+  <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800 max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Resultados de la Encuesta</DialogTitle>
         </DialogHeader>
@@ -191,7 +218,11 @@ export function SurveyResultsModal({ isOpen, onClose, survey }: SurveyResultsMod
           </Card>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" data-testid="button-export-results">
+            <Button
+              variant="outline"
+              data-testid="button-export-results"
+              onClick={() => exportSurveyResultsToCSV(survey, mockResponses)}
+            >
               Exportar Resultados
             </Button>
             <Button onClick={onClose} data-testid="button-close">

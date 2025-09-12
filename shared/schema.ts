@@ -129,6 +129,13 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   sentAt: true,
 });
 
+// Extended schema for draft notifications that includes status
+export const insertNotificationWithStatusSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+});
+
 export const insertSurveySchema = createInsertSchema(surveys).omit({
   id: true,
   createdAt: true,
@@ -148,3 +155,4 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Survey = typeof surveys.$inferSelect;
 export type InsertSurvey = z.infer<typeof insertSurveySchema>;
+export type InsertNotificationWithStatus = z.infer<typeof insertNotificationWithStatusSchema>;

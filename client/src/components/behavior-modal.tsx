@@ -117,12 +117,12 @@ export function BehaviorModal({ isOpen, onClose }: BehaviorModalProps) {
             <div>
               <Label className="block text-sm font-medium mb-2">Estudiante *</Label>
               <Select value={formData.studentId} onValueChange={(value) => setFormData({ ...formData, studentId: value })}>
-                <SelectTrigger data-testid="select-student" className="bg-zinc-800 text-white border-zinc-700">
-                  <SelectValue placeholder="Seleccionar estudiante" className="text-white" />
+                <SelectTrigger data-testid="select-student">
+                  <SelectValue placeholder="Seleccionar estudiante" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 text-white border-zinc-700">
+                <SelectContent>
                   {students?.map((student) => (
-                    <SelectItem key={student.id} value={student.id} className="bg-zinc-900 text-white">
+                    <SelectItem key={student.id} value={student.id}>
                       {student.firstName} {student.lastName} - {student.grade} {student.section}
                     </SelectItem>
                   ))}
@@ -144,12 +144,12 @@ export function BehaviorModal({ isOpen, onClose }: BehaviorModalProps) {
             <div>
               <Label className="block text-sm font-medium mb-2">Tipo de Reporte *</Label>
               <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value as any })}>
-                <SelectTrigger data-testid="select-type" className="bg-zinc-800 text-white border-zinc-700">
-                  <SelectValue className="text-white" />
+                <SelectTrigger data-testid="select-type">
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 text-white border-zinc-700">
-                  <SelectItem value="positive" className="bg-zinc-900 text-white">Positivo</SelectItem>
-                  <SelectItem value="negative" className="bg-zinc-900 text-white">Negativo</SelectItem>
+                <SelectContent>
+                  <SelectItem value="positive">Positivo</SelectItem>
+                  <SelectItem value="negative">Negativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>

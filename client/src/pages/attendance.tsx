@@ -11,6 +11,7 @@ import { Plus, Edit } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceModal } from '@/components/attendance-modal';
+import { EditAttendanceModal } from '@/components/edit-attendance-modal';
 
 interface Student {
   id: string;
@@ -38,6 +39,8 @@ export default function Attendance() {
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedSection, setSelectedSection] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
 
   const { data: attendanceRecords, isLoading } = useQuery<AttendanceRecord[]>({
     queryKey: ['/api/attendance', selectedDate, selectedGrade, selectedSection],
@@ -232,7 +235,22 @@ export default function Attendance() {
                       </td>
                       <td className="p-4">{record.time || '--'}</td>
                       <td className="p-4">
-                        <Button variant="ghost" size="sm" data-testid={`button-edit-${record.id}`}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedAttendance({
+                              id: record.id,
+                              studentName: `${record.student.firstName} ${record.student.lastName}`,
+                              date: record.date,
+                              status: record.status,
+                              time: record.time,
+                              notes: '', // Add notes field to your backend if needed
+                            });
+                            setIsEditModalOpen(true);
+                          }}
+                          data-testid={`button-edit-${record.id}`}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </td>
@@ -248,6 +266,12 @@ export default function Attendance() {
       <AttendanceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <EditAttendanceModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        attendance={selectedAttendance}
       />
     </div>
   );

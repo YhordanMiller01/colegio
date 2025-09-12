@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -44,20 +44,6 @@ export function StudentModal({ isOpen, onClose, student, mode }: StudentModalPro
     parentEmail: student?.parentEmail || '',
     parentPhone: student?.parentPhone || '',
   });
-
-  useEffect(() => {
-    setFormData({
-      studentId: student?.studentId || '',
-      firstName: student?.firstName || '',
-      lastName: student?.lastName || '',
-      grade: student?.grade || '',
-      section: student?.section || '',
-      status: student?.status || 'active',
-      parentName: student?.parentName || '',
-      parentEmail: student?.parentEmail || '',
-      parentPhone: student?.parentPhone || '',
-    });
-  }, [student, mode, isOpen]);
 
   const mutation = useMutation({
     mutationFn: async (data: Student) => {
@@ -199,7 +185,7 @@ export function StudentModal({ isOpen, onClose, student, mode }: StudentModalPro
             <Input
               value={formData.parentName}
               onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-              placeholder="María García"
+              placeholder="Marcela Tapias"
               data-testid="input-parent-name"
             />
           </div>
@@ -211,7 +197,7 @@ export function StudentModal({ isOpen, onClose, student, mode }: StudentModalPro
                 type="email"
                 value={formData.parentEmail}
                 onChange={(e) => setFormData({ ...formData, parentEmail: e.target.value })}
-                placeholder="maria.garcia@email.com"
+                placeholder="marcela.tapias@email.com"
                 data-testid="input-parent-email"
               />
             </div>
@@ -220,7 +206,7 @@ export function StudentModal({ isOpen, onClose, student, mode }: StudentModalPro
               <Input
                 value={formData.parentPhone}
                 onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                placeholder="+57 300 123 4567"
+                placeholder="+57 300 000 000"
                 data-testid="input-parent-phone"
               />
             </div>

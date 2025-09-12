@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStudentSchema, insertAttendanceSchema, insertBehaviorReportSchema, insertNotificationSchema, insertSurveySchema } from "@shared/schema";
+import { insertStudentSchema, insertAttendanceSchema, insertBehaviorReportSchema, insertNotificationSchema, insertNotificationWithStatusSchema, insertSurveySchema } from "@shared/schema";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -65,6 +65,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Dashboard stats error:", error);
       res.status(500).json({ message: "Error al obtener estadísticas" });
+    }
+  });
+
+  // Dashboard chart data
+  app.get("/api/dashboard/weekly-attendance", authenticateToken, async (req, res) => {
+    try {
+      const data = await storage.getWeeklyAttendanceData();
+      res.json(data);
+    } catch (error) {
+      console.error("Weekly attendance data error:", error);
+      res.status(500).json({ message: "Error al obtener datos de asistencia semanal" });
+    }
+  });
+
+  app.get("/api/dashboard/behavior-by-grade", authenticateToken, async (req, res) => {
+    try {
+      const data = await storage.getBehaviorReportsByGrade();
+      res.json(data);
+    } catch (error) {
+      console.error("Behavior by grade data error:", error);
+      res.status(500).json({ message: "Error al obtener datos de comportamiento por grado" });
     }
   });
 
@@ -187,11 +208,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/notifications", authenticateToken, async (req, res) => {
     try {
-      const validatedData = insertNotificationSchema.parse(req.body);
+      const validatedData = insertNotificationWithStatusSchema.parse(req.body);
+      
+      // Validate recipients are not empty if sending notification (not draft)
+      if (validatedData.status !== 'draft' && (!validatedData.recipients || validatedData.recipients.length === 0 || validatedData.recipients[0] === '')) {
+        return res.status(400).json({ message: "Los destinatarios son requeridos para enviar la notificación" });
+      }
+      
       const notification = await storage.createNotification(validatedData);
       
-      // Mark as sent immediately (in a real app, this would be handled by email service)
-      await storage.updateNotificationStatus(notification.id, 'sent');
+      // Mark as sent if not a draft (in a real app, this would be handled by email service)
+      if (validatedData.status !== 'draft') {
+        await storage.updateNotificationStatus(notification.id, 'sent');
+      }
       
       res.status(201).json(notification);
     } catch (error) {

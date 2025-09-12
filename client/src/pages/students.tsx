@@ -11,6 +11,7 @@ import { Plus, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { StudentModal } from '@/components/student-modal';
+import { StudentDetailsModal } from '@/components/student-details-modal';
 
 interface Student {
   id: string;
@@ -32,11 +33,13 @@ export default function Students() {
   const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedGrade, setSelectedGrade] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | undefined>();
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [studentToView, setStudentToView] = useState<Student | null>(null);
 
   const { data: students, isLoading } = useQuery<Student[]>({
     queryKey: ['/api/students'],
@@ -83,10 +86,10 @@ export default function Students() {
       student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesGrade = selectedGrade === 'all' || selectedGrade === '' || student.grade === selectedGrade;
-    const matchesStatus = selectedStatus === 'all' || selectedStatus === '' || student.status === selectedStatus;
-
+    
+    const matchesGrade = selectedGrade === '' || student.grade === selectedGrade;
+    const matchesStatus = selectedStatus === '' || student.status === selectedStatus;
+    
     return matchesSearch && matchesGrade && matchesStatus;
   }) || [];
 
@@ -103,13 +106,39 @@ export default function Students() {
     }
   };
 
-  const handleDeleteStudent = (studentId: string) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este estudiante?')) {
-      deleteStudentMutation.mutate(studentId);
+  const handleDeleteStudent = async (student: Student) => {
+    if (window.confirm(`¿Estás seguro de eliminar al estudiante ${student.firstName} ${student.lastName}? Esta acción no se puede deshacer.`)) {
+      try {
+        const response = await fetch(`/api/students/${student.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error);
+        }
+        
+        queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+        
+        toast({
+          title: 'Estudiante eliminado',
+          description: 'El estudiante se ha eliminado correctamente.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo eliminar el estudiante. Verifica que no tenga registros asociados.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
-  const currentPage = 1;
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalItems = filteredStudents.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -125,7 +154,53 @@ export default function Students() {
           <p className="text-muted-foreground">Administra la información de los estudiantes</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="secondary" data-testid="button-export">
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              // Export functionality
+              const csvData = filteredStudents?.map(student => ({
+                'ID': student.studentId,
+                'Nombres': student.firstName,
+                'Apellidos': student.lastName,
+                'Grado': student.grade,
+                'Sección': student.section,
+                'Estado': student.status,
+                'Padre/Tutor': student.parentName,
+                'Email': student.parentEmail,
+                'Teléfono': student.parentPhone || ''
+              }));
+              
+              if (csvData && csvData.length > 0) {
+                const headers = Object.keys(csvData[0]).join(',');
+                const rows = csvData.map(row => Object.values(row).join(','));
+                const csv = [headers, ...rows].join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                  const url = URL.createObjectURL(blob);
+                  link.setAttribute('href', url);
+                  link.setAttribute('download', `estudiantes_${new Date().toISOString().split('T')[0]}.csv`);
+                  link.style.visibility = 'hidden';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+                
+                toast({
+                  title: 'Exportado exitosamente',
+                  description: 'La lista de estudiantes se ha descargado como archivo CSV.',
+                });
+              } else {
+                toast({
+                  title: 'Sin datos',
+                  description: 'No hay estudiantes para exportar.',
+                  variant: 'destructive',
+                });
+              }
+            }}
+            data-testid="button-export"
+          >
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
@@ -194,8 +269,8 @@ export default function Students() {
                 className="w-full"
                 onClick={() => {
                   setSearchTerm('');
-                  setSelectedGrade('all');
-                  setSelectedStatus('all');
+                  setSelectedGrade('');
+                  setSelectedStatus('');
                 }}
                 data-testid="button-clear-filters"
               >
@@ -277,6 +352,10 @@ export default function Students() {
                             <Button 
                               variant="ghost" 
                               size="sm"
+                              onClick={() => {
+                                setStudentToView(student);
+                                setIsDetailsModalOpen(true);
+                              }}
                               data-testid={`button-view-${student.id}`}
                             >
                               <Eye className="h-4 w-4" />
@@ -296,7 +375,7 @@ export default function Students() {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleDeleteStudent(student.id)}
+                              onClick={() => handleDeleteStudent(student)}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               data-testid={`button-delete-${student.id}`}
                             >
@@ -320,6 +399,7 @@ export default function Students() {
                     variant="outline" 
                     size="sm"
                     disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
                     data-testid="button-previous-page"
                   >
                     Anterior
@@ -353,6 +433,7 @@ export default function Students() {
                     variant="outline" 
                     size="sm"
                     disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
                     data-testid="button-next-page"
                   >
                     Siguiente
@@ -369,6 +450,12 @@ export default function Students() {
         onClose={() => setIsModalOpen(false)}
         student={selectedStudent}
         mode={modalMode}
+      />
+
+      <StudentDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        student={studentToView}
       />
     </div>
   );

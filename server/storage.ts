@@ -66,6 +66,18 @@ export interface IStorage {
     activeSurveys: number;
     surveyResponses: number;
   }>;
+
+  // Dashboard chart data
+  getWeeklyAttendanceData(): Promise<{
+    day: string;
+    percentage: number;
+  }[]>;
+
+  getBehaviorReportsByGrade(): Promise<{
+    grade: string;
+    positive: number;
+    negative: number;
+  }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -280,6 +292,61 @@ export class DatabaseStorage implements IStorage {
       activeSurveys: Number(surveyStatsResult[0]?.active || 0),
       surveyResponses: Number(surveyStatsResult[0]?.totalResponses || 0)
     };
+  }
+
+  async getWeeklyAttendanceData() {
+    // Get the last 7 days
+    const days = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      days.push(date.toISOString().split('T')[0]);
+    }
+
+    const weeklyData = await Promise.all(
+      days.map(async (date) => {
+        const dayData = await db.select({
+          total: sql`COUNT(*)`,
+          present: sql`COUNT(*) FILTER (WHERE status = 'present')`
+        }).from(attendance).where(eq(attendance.date, date));
+
+        const total = Number(dayData[0]?.total || 0);
+        const present = Number(dayData[0]?.present || 0);
+        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+        // Format day name in Spanish
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+        const dayName = dayNames[new Date(date).getDay()];
+
+        return {
+          day: dayName,
+          percentage
+        };
+      })
+    );
+
+    return weeklyData;
+  }
+
+  async getBehaviorReportsByGrade() {
+    const gradeData = await db
+      .select({
+        grade: students.grade,
+        positive: sql`COUNT(*) FILTER (WHERE ${behaviorReports.type} = 'positive')`,
+        negative: sql`COUNT(*) FILTER (WHERE ${behaviorReports.type} = 'negative')`
+      })
+      .from(behaviorReports)
+      .innerJoin(students, eq(behaviorReports.studentId, students.id))
+      .groupBy(students.grade)
+      .orderBy(students.grade);
+
+    return gradeData.map(item => ({
+      grade: item.grade + '° Grado',
+      positive: Number(item.positive || 0),
+      negative: Number(item.negative || 0)
+    }));
   }
 }
 

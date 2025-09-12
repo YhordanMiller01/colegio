@@ -34,6 +34,7 @@ export default function Behavior() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState<'all' | 'positive' | 'negative' | 'pending'>('all');
 
   const { data: behaviorReports, isLoading } = useQuery<BehaviorReport[]>({
     queryKey: ['/api/behavior-reports'],
@@ -50,7 +51,7 @@ export default function Behavior() {
 
   const positiveReports = behaviorReports?.filter(r => r.type === 'positive').length || 0;
   const negativeReports = behaviorReports?.filter(r => r.type === 'negative').length || 0;
-  const pendingReports = negativeReports; // For demo purposes
+  const pendingReports = behaviorReports?.filter(r => r.type === 'negative' && new Date().getTime() - new Date(r.createdAt).getTime() > 24 * 60 * 60 * 1000).length || 0; // Reportes negativos de más de 24 horas
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -79,6 +80,45 @@ export default function Behavior() {
         >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Reporte
+        </Button>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button 
+          variant={filterType === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilterType('all')}
+          data-testid="button-filter-all"
+        >
+          Todos
+        </Button>
+        <Button 
+          variant={filterType === 'positive' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilterType('positive')}
+          data-testid="button-filter-positive"
+        >
+          <ThumbsUp className="mr-1 h-4 w-4" />
+          Positivos
+        </Button>
+        <Button 
+          variant={filterType === 'negative' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilterType('negative')}
+          data-testid="button-filter-negative"
+        >
+          <ThumbsDown className="mr-1 h-4 w-4" />
+          Negativos
+        </Button>
+        <Button 
+          variant={filterType === 'pending' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilterType('pending')}
+          data-testid="button-filter-pending"
+        >
+          <Clock className="mr-1 h-4 w-4" />
+          Pendientes
         </Button>
       </div>
 
@@ -140,7 +180,15 @@ export default function Behavior() {
             </div>
           ) : (
             <div className="space-y-4">
-              {behaviorReports?.map((report) => (
+              {behaviorReports?.filter(report => {
+                if (filterType === 'all') return true;
+                if (filterType === 'pending') {
+                  // Show negative reports older than 24 hours as pending
+                  return report.type === 'negative' && 
+                         new Date().getTime() - new Date(report.createdAt).getTime() > 24 * 60 * 60 * 1000;
+                }
+                return report.type === filterType;
+              }).map((report) => (
                 <div key={report.id} className="flex items-start space-x-4 p-4 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors">
                   <div className={`w-10 h-10 ${report.type === 'positive' ? 'bg-green-500/10' : 'bg-red-500/10'} rounded-full flex items-center justify-center`}>
                     {report.type === 'positive' ? (

@@ -15,6 +15,17 @@ interface DashboardStats {
   surveyResponses: number;
 }
 
+interface WeeklyAttendanceData {
+  day: string;
+  percentage: number;
+}
+
+interface BehaviorByGradeData {
+  grade: string;
+  positive: number;
+  negative: number;
+}
+
 export default function Dashboard() {
   const { token } = useAuth();
 
@@ -27,6 +38,32 @@ export default function Dashboard() {
         },
       });
       if (!response.ok) throw new Error('Error al cargar estadísticas');
+      return response.json();
+    },
+  });
+
+  const { data: weeklyAttendance, isLoading: isLoadingWeekly } = useQuery<WeeklyAttendanceData[]>({
+    queryKey: ['/api/dashboard/weekly-attendance'],
+    queryFn: async () => {
+      const response = await fetch('/api/dashboard/weekly-attendance', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Error al cargar datos de asistencia semanal');
+      return response.json();
+    },
+  });
+
+  const { data: behaviorByGrade, isLoading: isLoadingBehavior } = useQuery<BehaviorByGradeData[]>({
+    queryKey: ['/api/dashboard/behavior-by-grade'],
+    queryFn: async () => {
+      const response = await fetch('/api/dashboard/behavior-by-grade', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Error al cargar datos de comportamiento por grado');
       return response.json();
     },
   });
@@ -116,8 +153,31 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer className="h-64">
-              <div className="h-full bg-muted/20 rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">Gráfico de Asistencia Semanal</p>
+              <div className="h-full p-4">
+                {isLoadingWeekly ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-pulse text-muted-foreground">Cargando datos...</div>
+                  </div>
+                ) : weeklyAttendance && weeklyAttendance.length > 0 ? (
+                  <div className="space-y-4">
+                    {weeklyAttendance.map((day, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{day.day}</span>
+                        <div className="flex-1 mx-2 bg-muted rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${day.percentage >= 90 ? 'bg-green-500' : day.percentage >= 75 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{width: `${day.percentage}%`}}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{day.percentage}%</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-muted-foreground">No hay datos de asistencia disponibles</div>
+                  </div>
+                )}
               </div>
             </ChartContainer>
           </CardContent>
@@ -129,8 +189,44 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer className="h-64">
-              <div className="h-full bg-muted/20 rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">Gráfico de Comportamiento por Grado</p>
+              <div className="h-full p-4">
+                {isLoadingBehavior ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-pulse text-muted-foreground">Cargando datos...</div>
+                  </div>
+                ) : behaviorByGrade && behaviorByGrade.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      {behaviorByGrade.map((grade, index) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{grade.grade}</span>
+                          <div className="flex space-x-1">
+                            <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                            <span className="text-xs">{grade.positive}</span>
+                            <div className="w-4 h-4 bg-red-500 rounded-full ml-2"></div>
+                            <span className="text-xs">{grade.negative}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 text-xs text-muted-foreground">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span>Positivos</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          <span>Negativos</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-muted-foreground">No hay datos de comportamiento disponibles</div>
+                  </div>
+                )}
               </div>
             </ChartContainer>
           </CardContent>

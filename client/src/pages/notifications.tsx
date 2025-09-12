@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { NotebookPen, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationModal } from '@/components/notification-modal';
+import { ViewNotificationModal } from '@/components/view-notification-modal';
 
 interface Notification {
   id: string;
@@ -26,6 +28,9 @@ export default function Notifications() {
   const { token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
   const [formData, setFormData] = useState({
     recipients: '',
@@ -33,6 +38,8 @@ export default function Notifications() {
     subject: '',
     message: '',
   });
+
+  const [isDraft, setIsDraft] = useState(false);
 
   const { data: notifications, isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
@@ -48,33 +55,48 @@ export default function Notifications() {
   });
 
   const createNotificationMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: typeof formData & { status?: 'draft' | 'sent' }) => {
+      const requestData = {
+        ...data,
+        recipients: data.status === 'draft' ? [] : [data.recipients], // Empty array for drafts
+        status: data.status || 'sent'
+      };
+      
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...data,
-          recipients: [data.recipients], // Convert to array
-        }),
+        body: JSON.stringify(requestData),
       });
-      if (!response.ok) throw new Error('Error al crear notificación');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al crear notificación');
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       setFormData({ recipients: '', type: '', subject: '', message: '' });
-      toast({
-        title: "Notificación enviada",
-        description: "La notificación se ha enviado correctamente.",
-      });
+      setIsDraft(false);
+      
+      if (variables.status === 'draft') {
+        toast({
+          title: "Borrador guardado",
+          description: "El borrador se ha guardado correctamente.",
+        });
+      } else {
+        toast({
+          title: "Notificación enviada",
+          description: "La notificación se ha enviado correctamente.",
+        });
+      }
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "No se pudo enviar la notificación.",
+        description: error.message || "No se pudo procesar la notificación.",
         variant: "destructive",
       });
     },
@@ -90,7 +112,8 @@ export default function Notifications() {
       });
       return;
     }
-    createNotificationMutation.mutate(formData);
+    setIsDraft(false);
+    createNotificationMutation.mutate({ ...formData, status: 'sent' });
   };
 
   const formatDate = (dateString: string) => {
@@ -109,7 +132,10 @@ export default function Notifications() {
           <h2 className="text-2xl font-bold">Notificaciones a Padres</h2>
           <p className="text-muted-foreground">Envía y gestiona comunicaciones con los padres de familia</p>
         </div>
-        <Button data-testid="button-new-notification">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          data-testid="button-new-notification"
+        >
           <NotebookPen className="mr-2 h-4 w-4" />
           Nueva Notificación
         </Button>
@@ -180,9 +206,26 @@ export default function Notifications() {
               <Button 
                 type="button" 
                 variant="outline"
+                onClick={() => {
+                  if (!formData.subject || !formData.message) {
+                    toast({
+                      title: "Campos requeridos",
+                      description: "Por favor completa el asunto y mensaje para guardar el borrador.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  setIsDraft(true);
+                  createNotificationMutation.mutate({
+                    ...formData,
+                    status: 'draft'
+                  });
+                }}
+                disabled={createNotificationMutation.isPending}
                 data-testid="button-save-draft"
               >
-                Guardar Borrador
+                {createNotificationMutation.isPending ? 'Guardando...' : 'Guardar Borrador'}
               </Button>
               <Button 
                 type="submit"
@@ -250,7 +293,15 @@ export default function Notifications() {
                         {notification.status === 'sent' ? 'Enviado' : 
                          notification.status === 'failed' ? 'Fallido' : 'Borrador'}
                       </Badge>
-                      <Button variant="ghost" size="sm" data-testid={`button-view-${notification.id}`}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedNotification(notification);
+                          setIsViewModalOpen(true);
+                        }}
+                        data-testid={`button-view-${notification.id}`}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </div>
@@ -261,6 +312,17 @@ export default function Notifications() {
           )}
         </CardContent>
       </Card>
+
+      <NotificationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+
+      <ViewNotificationModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        notification={selectedNotification}
+      />
     </div>
   );
 }
