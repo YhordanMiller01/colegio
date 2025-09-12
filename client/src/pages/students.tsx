@@ -33,8 +33,8 @@ export default function Students() {
   const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | undefined>();
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -86,10 +86,10 @@ export default function Students() {
       student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesGrade = selectedGrade === '' || student.grade === selectedGrade;
-    const matchesStatus = selectedStatus === '' || student.status === selectedStatus;
-    
+
+    const matchesGrade = selectedGrade === 'all' || student.grade === selectedGrade;
+    const matchesStatus = selectedStatus === 'all' || student.status === selectedStatus;
+
     return matchesSearch && matchesGrade && matchesStatus;
   }) || [];
 
@@ -269,8 +269,8 @@ export default function Students() {
                 className="w-full"
                 onClick={() => {
                   setSearchTerm('');
-                  setSelectedGrade('');
-                  setSelectedStatus('');
+                  setSelectedGrade('all');
+                  setSelectedStatus('all');
                 }}
                 data-testid="button-clear-filters"
               >

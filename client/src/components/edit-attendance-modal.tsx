@@ -131,13 +131,13 @@ export function EditAttendanceModal({ isOpen, onClose, attendance }: EditAttenda
           <div>
             <Label className="block text-sm font-medium mb-2">Estado *</Label>
             <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as any })}>
-              <SelectTrigger data-testid="select-edit-status">
-                <SelectValue />
+              <SelectTrigger data-testid="select-edit-status" className="bg-zinc-800 text-white border-zinc-700">
+                <SelectValue className="text-white" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="present">Presente</SelectItem>
-                <SelectItem value="absent">Ausente</SelectItem>
-                <SelectItem value="late">Tarde</SelectItem>
+              <SelectContent className="bg-zinc-900 text-white border-zinc-700">
+                <SelectItem value="present" className="bg-zinc-900 text-white">Presente</SelectItem>
+                <SelectItem value="absent" className="bg-zinc-900 text-white">Ausente</SelectItem>
+                <SelectItem value="late" className="bg-zinc-900 text-white">Tarde</SelectItem>
               </SelectContent>
             </Select>
           </div>

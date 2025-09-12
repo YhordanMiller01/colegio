@@ -82,7 +82,7 @@ export function ViewNotificationModal({ isOpen, onClose, notification }: ViewNot
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800">
+  <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800 max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detalles de la Notificación</DialogTitle>
         </DialogHeader>

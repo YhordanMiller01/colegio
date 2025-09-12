@@ -55,7 +55,7 @@ export function StudentDetailsModal({ isOpen, onClose, student }: StudentDetails
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800">
+  <DialogContent className="max-w-2xl bg-zinc-900 text-white bg-opacity-100 shadow-2xl border border-zinc-800 max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detalles del Estudiante</DialogTitle>
         </DialogHeader>

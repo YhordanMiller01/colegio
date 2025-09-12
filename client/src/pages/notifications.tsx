@@ -156,10 +156,10 @@ export default function Notifications() {
                     <SelectValue placeholder="Seleccionar grupo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos los padres</SelectItem>
-                    <SelectItem value="10A">Padres de 10° A</SelectItem>
-                    <SelectItem value="9B">Padres de 9° B</SelectItem>
-                    <SelectItem value="especificos">Padres específicos</SelectItem>
+                    <SelectItem value="todos" className="bg-zinc-700 text-white font-bold">Todos los padres</SelectItem>
+                    <SelectItem value="10A" className="bg-zinc-700 text-white font-bold">Padres de 10° A</SelectItem>
+                    <SelectItem value="9B" className="bg-zinc-700 text-white font-bold">Padres de 9° B</SelectItem>
+                    <SelectItem value="especificos" className="bg-zinc-700 text-white font-bold">Padres específicos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -170,11 +170,11 @@ export default function Notifications() {
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="informativo">Informativo</SelectItem>
-                    <SelectItem value="comportamiento">Comportamiento</SelectItem>
-                    <SelectItem value="asistencia">Asistencia</SelectItem>
-                    <SelectItem value="academico">Académico</SelectItem>
-                    <SelectItem value="evento">Evento</SelectItem>
+                    <SelectItem value="informativo" className="bg-zinc-700 text-white font-bold">Informativo</SelectItem>
+                    <SelectItem value="comportamiento" className="bg-zinc-700 text-white font-bold">Comportamiento</SelectItem>
+                    <SelectItem value="asistencia" className="bg-zinc-700 text-white font-bold">Asistencia</SelectItem>
+                    <SelectItem value="academico" className="bg-zinc-700 text-white font-bold">Académico</SelectItem>
+                    <SelectItem value="evento" className="bg-zinc-700 text-white font-bold">Evento</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

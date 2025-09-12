@@ -36,8 +36,8 @@ export default function Attendance() {
   const queryClient = useQueryClient();
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedGrade, setSelectedGrade] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('all');
+  const [selectedSection, setSelectedSection] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<any>(null);
@@ -47,8 +47,8 @@ export default function Attendance() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append('date', selectedDate);
-      if (selectedGrade) params.append('grade', selectedGrade);
-      if (selectedSection) params.append('section', selectedSection);
+      if (selectedGrade && selectedGrade !== 'all') params.append('grade', selectedGrade);
+      if (selectedSection && selectedSection !== 'all') params.append('section', selectedSection);
       
       const response = await fetch(`/api/attendance?${params.toString()}`, {
         headers: {
