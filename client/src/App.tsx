@@ -64,7 +64,7 @@ function AppContent() {
           <header className="bg-card border-b border-border p-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <h1 className="text-xl font-semibold text-foreground">DisciColeControl</h1>
+              <h1 className="text-xl font-semibold text-foreground">DisciCole</h1>
             </div>
             
             <div className="flex items-center space-x-4">

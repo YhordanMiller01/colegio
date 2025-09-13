@@ -61,11 +61,15 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <GraduationCap className="text-primary-foreground h-6 w-6" />
+            <div className="w-12 h-12 rounded-full shadow-lg bg-gradient-to-br from-primary/80 to-secondary/60 border-2 border-white flex items-center justify-center">
+              <img
+                src="/logo-colegio.png"
+                alt="Logo Colegio"
+                className="h-10 w-10 object-contain rounded-full drop-shadow-md bg-white p-1"
+              />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">DisciColeControl</h2>
+              <h2 className="text-lg font-semibold text-foreground">DisciCole</h2>
               <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
           </div>

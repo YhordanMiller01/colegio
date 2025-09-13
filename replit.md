@@ -1,6 +1,6 @@
 # Overview
 
-DisciColeControl is a comprehensive student management system built for educational institutions. The application provides tools for tracking student attendance, behavior monitoring, parent communication through notifications and surveys, and complete student record management. The system is designed as a full-stack web application with a React-based frontend and Express.js backend, utilizing PostgreSQL for data persistence.
+DisciCole is a comprehensive student management system built for educational institutions. The application provides tools for tracking student attendance, behavior monitoring, parent communication through notifications and surveys, and complete student record management. The system is designed as a full-stack web application with a React-based frontend and Express.js backend, utilizing PostgreSQL for data persistence.
 
 # User Preferences
 

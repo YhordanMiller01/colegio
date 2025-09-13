@@ -22,7 +22,7 @@ export function LoginModal() {
       await login(email, password);
       toast({
         title: "Inicio de sesión exitoso",
-        description: "Bienvenido a DisciColeControl",
+        description: "Bienvenido a DisciCole",
       });
     } catch (error) {
       toast({
@@ -36,15 +36,19 @@ export function LoginModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-blue-100/80 via-white/90 to-indigo-200/80">
       <Card className="max-w-md w-full mx-4">
         <CardContent className="pt-6">
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
-              <GraduationCap className="text-2xl text-primary-foreground h-8 w-8" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">DisciColeControl</h1>
-            <p className="text-muted-foreground mt-2">Sistema de Gestión Estudiantil</p>
+              <div className="mx-auto w-24 h-24 mb-4 flex items-center justify-center rounded-full shadow-lg bg-gradient-to-br from-primary/80 to-secondary/60 border-4 border-white">
+                <img
+                  src="/logo-colegio.png"
+                  alt="Logo Colegio"
+                  className="h-20 w-20 object-contain rounded-full drop-shadow-md bg-white p-1"
+                />
+              </div>
+              <h1 className="text-3xl font-extrabold text-foreground tracking-tight">DisciCole</h1>
+              <p className="text-muted-foreground mt-2 text-base">Sistema de Gestión Estudiantil</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
